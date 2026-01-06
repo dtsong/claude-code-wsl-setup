@@ -112,9 +112,9 @@ claude
 When running multiple agents in parallel, notifications will show **which agent** needs attention:
 
 ```
+Claude Code [Frontend]    ← Custom name via CLAUDE_AGENT_NAME env var
 Claude Code [agent-1]     ← Git branch name (best for worktrees)
 Claude Code [Agent 3]     ← Extracted from directory name (e.g., project-agent-3)
-Claude Code [Tab 42]      ← TTY number fallback
 Claude Code [my-project]  ← Project directory name fallback
 ```
 
@@ -122,18 +122,45 @@ Claude Code [my-project]  ← Project directory name fallback
 
 The hooks automatically detect the agent identifier using this priority:
 
-1. **Git branch name** - Perfect for worktree setups where each agent works on a different branch
-2. **Agent number** - Extracted from directory names like `project-agent-1`, `myapp-agent-3`
-3. **TTY number** - Uses terminal device number as a tab identifier
+1. **CLAUDE_AGENT_NAME** - User-defined environment variable (best for multi-tab without worktrees)
+2. **Git branch name** - Perfect for worktree setups where each agent works on a different branch
+3. **Agent number** - Extracted from directory names like `project-agent-1`, `myapp-agent-3`
 4. **Project name** - Falls back to the directory name
+
+### Setting Custom Agent Names (Multi-Tab Setup)
+
+For multiple Claude sessions in the **same project** (without worktrees), set a custom name in each terminal:
+
+```bash
+# Terminal 1 - Frontend work
+export CLAUDE_AGENT_NAME="Frontend"
+claude
+
+# Terminal 2 - Backend work
+export CLAUDE_AGENT_NAME="Backend"
+claude
+
+# Terminal 3 - Testing
+export CLAUDE_AGENT_NAME="Tests"
+claude
+```
+
+You can add these exports to your shell profile or create aliases:
+
+```bash
+# Add to ~/.bashrc or ~/.zshrc
+alias claude-frontend='CLAUDE_AGENT_NAME="Frontend" claude'
+alias claude-backend='CLAUDE_AGENT_NAME="Backend" claude'
+alias claude-tests='CLAUDE_AGENT_NAME="Tests" claude'
+```
 
 ### Example Notifications
 
 | Setup | Notification Title |
 |-------|-------------------|
+| `CLAUDE_AGENT_NAME="Frontend"` | `Claude Code [Frontend]` |
 | Worktree on branch `feature-auth` | `Claude Code [feature-auth]` |
 | Directory `myapp-agent-2` | `Claude Code [Agent 2]` |
-| Generic terminal tab | `Claude Code [Tab 7]` |
 
 ### Notification Log
 

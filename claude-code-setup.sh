@@ -96,23 +96,35 @@ cat > ~/.claude/hooks/notify.sh << 'HOOK_EOF'
 # Notification Hook
 # Runs when Claude Code needs user input (permission prompt or idle)
 # No third-party dependencies required!
-# Identifies which agent/terminal needs attention
+#
+# Agent identification priority:
+# 1. CLAUDE_AGENT_NAME env var (user-defined per terminal)
+# 2. Git branch name (for worktree setups)
+# 3. Agent number from directory name (e.g., project-agent-3)
+# 4. Project directory name (fallback)
+#
+# For multi-tab setups: export CLAUDE_AGENT_NAME="Frontend" in each terminal
 #===============================================================================
 
-PROJECT_NAME=$(basename "${CLAUDE_PROJECT_DIR:-unknown}")
+PROJECT_NAME=$(basename "${CLAUDE_PROJECT_DIR:-$(pwd)}")
 TIMESTAMP=$(date "+%H:%M:%S")
 
-# Get agent identifier (branch name, agent number, or TTY)
+# Get agent identifier
 get_agent_id() {
+    # 1. User-defined agent name (best for multi-tab without worktrees)
+    if [ -n "$CLAUDE_AGENT_NAME" ]; then echo "$CLAUDE_AGENT_NAME"; return; fi
+    # 2. Git branch (works great with worktrees)
     if command -v git &> /dev/null; then
         if [ -d "${CLAUDE_PROJECT_DIR}/.git" ] || [ -f "${CLAUDE_PROJECT_DIR}/.git" ]; then
-            BRANCH=$(cd "${CLAUDE_PROJECT_DIR}" && git branch --show-current 2>/dev/null)
-            if [ -n "$BRANCH" ]; then echo "$BRANCH"; return; fi
+            BRANCH=$(cd "${CLAUDE_PROJECT_DIR}" 2>/dev/null && git branch --show-current 2>/dev/null)
+            if [ -n "$BRANCH" ] && [ "$BRANCH" != "main" ] && [ "$BRANCH" != "master" ]; then
+                echo "$BRANCH"; return
+            fi
         fi
     fi
+    # 3. Agent number from directory pattern
     if [[ "$PROJECT_NAME" =~ -([0-9]+)$ ]]; then echo "Agent ${BASH_REMATCH[1]}"; return; fi
-    TTY_NUM=$(tty 2>/dev/null | grep -oE '[0-9]+$' | tail -1)
-    if [ -n "$TTY_NUM" ]; then echo "Tab $TTY_NUM"; return; fi
+    # 4. Fallback to project name
     echo "$PROJECT_NAME"
 }
 
@@ -172,23 +184,35 @@ cat > ~/.claude/hooks/stop.sh << 'HOOK_EOF'
 # Stop Hook
 # Runs when Claude Code finishes responding
 # No third-party dependencies required!
-# Identifies which agent/terminal completed
+#
+# Agent identification priority:
+# 1. CLAUDE_AGENT_NAME env var (user-defined per terminal)
+# 2. Git branch name (for worktree setups)
+# 3. Agent number from directory name (e.g., project-agent-3)
+# 4. Project directory name (fallback)
+#
+# For multi-tab setups: export CLAUDE_AGENT_NAME="Frontend" in each terminal
 #===============================================================================
 
-PROJECT_NAME=$(basename "${CLAUDE_PROJECT_DIR:-unknown}")
+PROJECT_NAME=$(basename "${CLAUDE_PROJECT_DIR:-$(pwd)}")
 TIMESTAMP=$(date "+%H:%M:%S")
 
-# Get agent identifier (branch name, agent number, or TTY)
+# Get agent identifier
 get_agent_id() {
+    # 1. User-defined agent name (best for multi-tab without worktrees)
+    if [ -n "$CLAUDE_AGENT_NAME" ]; then echo "$CLAUDE_AGENT_NAME"; return; fi
+    # 2. Git branch (works great with worktrees)
     if command -v git &> /dev/null; then
         if [ -d "${CLAUDE_PROJECT_DIR}/.git" ] || [ -f "${CLAUDE_PROJECT_DIR}/.git" ]; then
-            BRANCH=$(cd "${CLAUDE_PROJECT_DIR}" && git branch --show-current 2>/dev/null)
-            if [ -n "$BRANCH" ]; then echo "$BRANCH"; return; fi
+            BRANCH=$(cd "${CLAUDE_PROJECT_DIR}" 2>/dev/null && git branch --show-current 2>/dev/null)
+            if [ -n "$BRANCH" ] && [ "$BRANCH" != "main" ] && [ "$BRANCH" != "master" ]; then
+                echo "$BRANCH"; return
+            fi
         fi
     fi
+    # 3. Agent number from directory pattern
     if [[ "$PROJECT_NAME" =~ -([0-9]+)$ ]]; then echo "Agent ${BASH_REMATCH[1]}"; return; fi
-    TTY_NUM=$(tty 2>/dev/null | grep -oE '[0-9]+$' | tail -1)
-    if [ -n "$TTY_NUM" ]; then echo "Tab $TTY_NUM"; return; fi
+    # 4. Fallback to project name
     echo "$PROJECT_NAME"
 }
 

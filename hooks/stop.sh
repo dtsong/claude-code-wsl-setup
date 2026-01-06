@@ -7,42 +7,48 @@
 # No third-party dependencies required!
 #
 # Identifies which agent/terminal completed using:
-# - Git branch name (for worktree setups)
-# - Project directory name
-# - Terminal/TTY identifier
+# 1. CLAUDE_AGENT_NAME env var (user-defined, e.g., export CLAUDE_AGENT_NAME="Backend")
+# 2. Git branch name (for worktree setups)
+# 3. Agent number from directory name (e.g., project-agent-3)
+# 4. Project directory name (fallback)
+#
+# For multi-tab setups without worktrees, set CLAUDE_AGENT_NAME in each terminal:
+#   Terminal 1: export CLAUDE_AGENT_NAME="Frontend"
+#   Terminal 2: export CLAUDE_AGENT_NAME="Backend"
+#   Terminal 3: export CLAUDE_AGENT_NAME="Tests"
 #===============================================================================
 
-PROJECT_NAME=$(basename "${CLAUDE_PROJECT_DIR:-unknown}")
+PROJECT_NAME=$(basename "${CLAUDE_PROJECT_DIR:-$(pwd)}")
 TIMESTAMP=$(date "+%H:%M:%S")
 
 # Try to get a meaningful agent identifier
-# Priority: 1) Git branch, 2) Worktree name, 3) Project dir, 4) TTY
+# Priority: 1) User-defined name, 2) Git branch, 3) Directory pattern, 4) Project name
 get_agent_id() {
-    # Try git branch first (works great with worktrees)
+    # 1. Check for user-defined agent name (best for multi-tab without worktrees)
+    if [ -n "$CLAUDE_AGENT_NAME" ]; then
+        echo "$CLAUDE_AGENT_NAME"
+        return
+    fi
+
+    # 2. Try git branch (works great with worktrees)
     if command -v git &> /dev/null; then
         if [ -d "${CLAUDE_PROJECT_DIR}/.git" ] || [ -f "${CLAUDE_PROJECT_DIR}/.git" ]; then
-            BRANCH=$(cd "${CLAUDE_PROJECT_DIR}" && git branch --show-current 2>/dev/null)
-            if [ -n "$BRANCH" ]; then
+            BRANCH=$(cd "${CLAUDE_PROJECT_DIR}" 2>/dev/null && git branch --show-current 2>/dev/null)
+            if [ -n "$BRANCH" ] && [ "$BRANCH" != "main" ] && [ "$BRANCH" != "master" ]; then
+                # Use branch name if it's not main/master (more informative)
                 echo "$BRANCH"
                 return
             fi
         fi
     fi
-    
-    # Try to extract agent number from directory name (e.g., project-agent-3)
+
+    # 3. Try to extract agent number from directory name (e.g., project-agent-3)
     if [[ "$PROJECT_NAME" =~ -([0-9]+)$ ]]; then
         echo "Agent ${BASH_REMATCH[1]}"
         return
     fi
-    
-    # Try to get TTY number for tab identification
-    TTY_NUM=$(tty 2>/dev/null | grep -oE '[0-9]+$' | tail -1)
-    if [ -n "$TTY_NUM" ]; then
-        echo "Tab $TTY_NUM"
-        return
-    fi
-    
-    # Fallback to project name
+
+    # 4. Fallback to project name
     echo "$PROJECT_NAME"
 }
 

@@ -124,7 +124,6 @@
       "Bash(sudo rm:*)",
       "Bash(sudo dd:*)",
       "Bash(mkfs:*)",
-      "Bash(:(){ :|:& };:)",
       "Bash(chmod -R 777 /)",
       "Bash(chown -R:*)"
     ]
