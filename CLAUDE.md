@@ -1,50 +1,110 @@
 # Claude Code Setup - Project Guide
 
-This repository contains configuration files and scripts to set up Claude Code for multi-agent parallel development on Windows/WSL, based on Boris Cherney's workflow.
+This repository contains a portable Claude Code configuration system — 34 agent personas, 48+ structured skills, multi-agent deliberation, session persistence, lifecycle hooks, and a permissions system optimized for Windows/WSL parallel development.
 
 ## Quick Install (For New Users)
 
 If the user wants to install this setup, run:
 
 ```bash
-chmod +x claude-code-setup.sh
-./claude-code-setup.sh
+chmod +x install.sh
+./install.sh --preset full --with-settings --with-hooks-json
 ```
 
-This single command will configure everything automatically.
+For a minimal install (skills only):
+
+```bash
+./install.sh
+```
+
+The legacy monolithic installer is preserved at `legacy/claude-code-setup.sh`.
 
 ## What This Project Does
 
-This setup enables running **5 parallel Claude Code agents** with:
-- Windows toast notifications that identify which agent needs attention
-- Auto-formatting hooks for code changes
-- Pre-approved permissions for common safe commands
-- Slash commands for git workflows
-- Git worktree helpers for parallel development
+This setup enables:
+- **34 agent personas** (17 Council + 17 Academy) for multi-agent deliberation
+- **48+ structured skills** across 16 departments
+- **8 deliberation modes** from quick brainstorm to deep audit
+- **Windows toast notifications** identifying which agent needs attention
+- **Auto-formatting hooks** for code changes
+- **Pre-approved permissions** for 76 common safe commands
+- **Session persistence** via `/handover` and auto-compaction hooks
+- **Issue-driven execution** via `/looper`, `/implement`, `/ralf`
+- **Project scaffolding** via `/new-python`, `/new-typescript`, `/new-terraform`, `/new-mcp-server`
+- **Workspace context** auto-loading based on git remote
+- **Git worktree helpers** for parallel development
 
 ## Project Structure
 
 ```
-claude-code-setup/
-├── claude-code-setup.sh    # Main installer script (run this!)
-├── settings.json           # Claude Code settings with hooks & permissions
-├── hooks/
-│   ├── notify.sh          # Notification when Claude needs input
-│   ├── stop.sh            # Notification when Claude completes
-│   └── format.sh          # Auto-format code after edits
-├── commands/
-│   ├── commit-push-pr.md  # Git commit → push → PR workflow
-│   ├── commit.md          # Quick commit
-│   ├── test.md            # Run project tests
-│   ├── lint.md            # Run linter
-│   ├── review.md          # Review changes
-│   └── simplify.md        # Refactor/simplify code
-├── templates/
-│   ├── CLAUDE.md          # Template for user projects
+claude-code-wsl-setup/
+├── install.sh              # Symlink-based installer (presets: skills/core/full)
+├── settings.json           # Merged settings: env + hooks + permissions
+├── hooks.json              # Standalone PreCompact hook config
+├── agents/                 # 34 agent personas (17 council + 17 academy)
+│   ├── council-architect.md
+│   ├── council-advocate.md
+│   ├── ...                 # 15 more council agents
+│   ├── academy-sage.md
+│   └── ...                 # 16 more academy agents
+├── commands/               # 22 slash commands + shared engine
+│   ├── _council-engine.md  # Shared deliberation engine (~1200 lines)
+│   ├── council.md          # Council theme layer
+│   ├── academy.md          # Academy theme layer
+│   ├── brainstorm.md       # Quick 3-agent gut check
+│   ├── looper.md           # Issue-to-PR with retry loops
+│   ├── implement.md        # Implement GitHub issues
+│   ├── ralf.md             # Autonomous PRD executor
+│   ├── handover.md         # Session knowledge transfer
+│   ├── g.md                # Git porcelain
+│   ├── ops.md              # Operations center
+│   ├── new-python.md       # Python project scaffolding
+│   ├── new-typescript.md   # TypeScript project scaffolding
+│   ├── new-terraform.md    # Terraform module scaffolding
+│   ├── new-mcp-server.md   # MCP server scaffolding
+│   ├── commit-push-pr.md   # Git commit → push → PR workflow
+│   ├── commit.md           # Quick commit
+│   ├── test.md             # Run project tests
+│   ├── lint.md             # Run linter
+│   ├── review.md           # Review changes
+│   └── simplify.md         # Refactor/simplify code
+├── skills/                 # 48+ structured skill templates
+│   ├── council/            # 16 departments × 2-3 skills each
+│   ├── academy/            # Academy theme skills
+│   ├── git-workflows/      # Git operations
+│   ├── github-workflow/    # GitHub interactions
+│   ├── language-conventions/ # Python, TypeScript, Terraform refs
+│   ├── terraform-skill/    # Terraform best practices
+│   ├── dbt-skill/          # dbt data engineering
+│   └── ...                 # 9 more standalone skill packs
+├── hooks/                  # Lifecycle hook scripts
+│   ├── notify.sh           # Notification when Claude needs input
+│   ├── stop.sh             # Notification when Claude completes
+│   ├── format.sh           # Auto-format code after edits
+│   └── pre-compact-handover.sh  # Auto-save before compaction
+├── workspaces/             # Project-specific context templates
+│   ├── FORMAT.md
+│   ├── _example/
+│   └── _full-stack/
+├── scripts/                # Utility scripts
+│   ├── create-worktrees.sh # Create git worktrees for parallel agents
+│   ├── init-project.sh     # Initialize Claude Code in a project
+│   ├── launch-agent.sh     # Launch an agent with context
+│   ├── run-agent.sh        # Run an agent task
+│   ├── agent-broadcast.sh  # Broadcast to all agents
+│   ├── agent-status.sh     # Check agent status
+│   ├── find-workspaces.sh  # Discover workspace configs
+│   ├── launch-workspace.sh # Initialize workspace context
+│   ├── notify-complete.sh  # Send completion notification
+│   └── task-board.sh       # Display task board
+├── templates/              # Project initialization templates
+│   ├── CLAUDE.md
 │   └── project-settings.json
-├── scripts/
-│   ├── init-project.sh    # Initialize Claude Code in a project
-│   └── create-worktrees.sh # Create git worktrees for parallel agents
+├── legacy/                 # Original monolithic installer (reference)
+│   └── claude-code-setup.sh
+├── ARCHITECTURE.md         # Technical reference
+├── CONTRIBUTING.md         # Contributor guide
+├── CHANGELOG.md
 ├── README.md
 └── LICENSE
 ```
@@ -52,71 +112,65 @@ claude-code-setup/
 ## Key Commands
 
 ```bash
-# Install everything
-./claude-code-setup.sh
+# Install (symlink-based, incremental)
+./install.sh                           # Skills only (safe default)
+./install.sh --preset core             # + commands + agents
+./install.sh --preset full             # + scripts + hooks + workspaces + templates
+./install.sh --with-settings           # Also link settings.json
+./install.sh --with-hooks-json         # Also link hooks.json
+./install.sh --dry-run                 # Preview what would be installed
+./install.sh --uninstall               # Remove all managed symlinks
 
-# After installation, these helpers are available:
-
-# Initialize Claude Code in any project
-~/.claude/init-project.sh /path/to/project
-
-# Create 5 git worktrees for parallel agents
-cd your-repo
-~/.claude/create-worktrees.sh 5
+# After installation:
+~/.claude/scripts/init-project.sh /path/to/project
+~/.claude/scripts/create-worktrees.sh 5
 ```
-
-## Installation Details
-
-The setup script installs files to:
-- `~/.claude/settings.json` - Global Claude Code configuration
-- `~/.claude/hooks/` - Notification and formatting hooks
-- `~/.claude/commands/` - Global slash commands
-- `~/.claude/templates/` - Project templates
-- `~/.claude/init-project.sh` - Project initializer
-- `~/.claude/create-worktrees.sh` - Worktree creator
 
 ## Development Guidelines
 
 ### When modifying hooks (`hooks/*.sh`):
 - Keep them fast (under 10 seconds)
 - Always exit with code 0 for success
-- Test on WSL before committing
 - Maintain cross-platform support (WSL, macOS, Linux)
 - Use the `get_agent_id()` function pattern for agent identification
 
-### When modifying the setup script:
-- The setup script must be idempotent (safe to run multiple times)
-- Use the print_success/print_warning/print_error functions for output
-- Test the full installation flow after changes
+### When modifying the installer:
+- The installer must be idempotent (safe to run multiple times)
+- WSL detection uses `/proc/version` — symlinks become copies on WSL
+- Test with `CLAUDE_DIR=/tmp/test-claude ./install.sh --preset full`
+- Verify uninstall: `./install.sh --uninstall`
 
 ### When adding new slash commands:
-- Place in `commands/` directory
-- Use `.md` extension
-- Include bash code blocks for commands Claude should run
+- Place in `commands/` directory with `.md` extension
+- Include YAML frontmatter with `description` and optional `argument-hint`
 - Keep commands focused on a single workflow
+
+### When modifying agents or skills:
+- Agent files require YAML frontmatter (`name`, `description`, `model`)
+- Skill files follow: Purpose, Inputs, Process, Output Format, Quality Checks
+- See [ARCHITECTURE.md](ARCHITECTURE.md) for full schema
+
+### When modifying the deliberation engine:
+- All workflow logic lives in `commands/_council-engine.md`
+- Theme files (`council.md`, `academy.md`) supply 14 configuration variables
+- Do not duplicate engine logic in theme files
 
 ## Testing Changes
 
-After modifying any files:
+```bash
+# Shell syntax
+bash -n install.sh
+bash -n hooks/*.sh
+bash -n scripts/*.sh
 
-1. Run the setup script on a clean environment:
-   ```bash
-   # Backup existing config
-   mv ~/.claude ~/.claude.backup
-   
-   # Run setup
-   ./claude-code-setup.sh
-   
-   # Test notifications
-   ~/.claude/hooks/notify.sh
-   ~/.claude/hooks/stop.sh
-   ```
+# JSON validation
+python3 -m json.tool settings.json >/dev/null
+python3 -m json.tool hooks.json >/dev/null
 
-2. Verify hooks work in Claude Code:
-   ```bash
-   claude
-   # Do something that triggers a notification
-   ```
+# Installer smoke test (isolated)
+CLAUDE_DIR="/tmp/claude-test" ./install.sh --preset skills --conflict-policy fail
+CLAUDE_DIR="/tmp/claude-test" ./install.sh --uninstall
+```
 
 ## No External Dependencies
 
