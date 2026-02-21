@@ -344,6 +344,7 @@ install() {
   fi
 
   local -a installed_pairs=()
+  local created=0 up_to_date=0 updated=0 skipped=0
   local entry kind
   for entry in "${plan[@]}"; do
     kind="${entry%%::*}"
@@ -351,7 +352,11 @@ install() {
     if [[ "$kind" == "DIR" ]]; then
       local dir_path="${entry#DIR::}"
       if [[ "$DRY_RUN" -eq 1 ]]; then
-        echo "  mkdir -p $dir_path"
+        if [[ -d "$dir_path" ]]; then
+          echo "  ✓ $dir_path (exists)"
+        else
+          echo "  mkdir -p $dir_path"
+        fi
       else
         mkdir -p "$dir_path"
       fi
@@ -363,19 +368,62 @@ install() {
       local src="${remainder%%::*}"
       local dst="${remainder##*::}"
 
+      # Check if destination already exists as a non-symlink (conflict).
       if [[ -e "$dst" && ! -L "$dst" ]]; then
+        if [[ "$USE_COPY" -eq 1 ]]; then
+          # WSL copy mode: check if content is already identical.
+          if diff -rq "$src" "$dst" >/dev/null 2>&1; then
+            if [[ "$DRY_RUN" -eq 1 ]]; then
+              echo "  ✓ $dst (already copied)"
+            else
+              echo "  ✓ $dst (already copied)"
+              up_to_date=$((up_to_date + 1))
+            fi
+            installed_pairs+=("$src::$dst")
+            continue
+          fi
+        fi
         if [[ "$CONFLICT_POLICY" == "skip" ]]; then
           echo "  conflict: $dst exists and is not a symlink (skipped)"
+          skipped=$((skipped + 1))
           continue
         fi
         die "Conflict: $dst exists and is not a symlink"
       fi
 
+      # Check if symlink already points to the correct target.
+      if [[ -L "$dst" ]]; then
+        local current_target
+        current_target="$(readlink "$dst" || true)"
+        if [[ "$current_target" == "$src" ]]; then
+          if [[ "$DRY_RUN" -eq 1 ]]; then
+            echo "  ✓ $dst (already linked)"
+          else
+            echo "  ✓ $dst (already linked)"
+            up_to_date=$((up_to_date + 1))
+          fi
+          installed_pairs+=("$src::$dst")
+          continue
+        else
+          # Symlink exists but points to wrong target — relink.
+          if [[ "$DRY_RUN" -eq 1 ]]; then
+            echo "  ↻ $dst (would relink)"
+          else
+            ln -sfn "$src" "$dst"
+            echo "  ↻ $dst (relinked)"
+            updated=$((updated + 1))
+          fi
+          installed_pairs+=("$src::$dst")
+          continue
+        fi
+      fi
+
+      # Destination doesn't exist — create new link/copy.
       if [[ "$DRY_RUN" -eq 1 ]]; then
         if [[ "$USE_COPY" -eq 1 ]]; then
-          echo "  cp -rf $src $dst"
+          echo "  + $dst (copy)"
         else
-          echo "  ln -sfn $src $dst"
+          echo "  + $dst (link)"
         fi
       else
         mkdir -p "$(dirname "$dst")"
@@ -384,6 +432,8 @@ install() {
         else
           ln -sfn "$src" "$dst"
         fi
+        echo "  + $dst"
+        created=$((created + 1))
       fi
       installed_pairs+=("$src::$dst")
       continue
@@ -397,11 +447,22 @@ install() {
   fi
 
   # Write manifest for safe uninstall.
-  write_manifest "$PRESET" "${installed_pairs[@]}"
+  if [[ "${#installed_pairs[@]}" -gt 0 ]]; then
+    write_manifest "$PRESET" "${installed_pairs[@]}"
+  else
+    write_manifest "$PRESET"
+  fi
 
   echo ""
-  echo "Done. Installed ${#installed_pairs[@]} link(s)."
-  echo "Tip: rerun with --preset core or --preset full to adopt more of the setup."
+  if [[ "$created" -eq 0 && "$updated" -eq 0 && "$skipped" -eq 0 ]]; then
+    echo "Everything is already set up. No changes needed."
+  else
+    echo "Done."
+    if [[ "$created" -gt 0 ]]; then echo "  $created new link(s) created"; fi
+    if [[ "$up_to_date" -gt 0 ]]; then echo "  $up_to_date already up to date"; fi
+    if [[ "$updated" -gt 0 ]]; then echo "  $updated relinked (target updated)"; fi
+    if [[ "$skipped" -gt 0 ]]; then echo "  $skipped conflict(s) skipped"; fi
+  fi
 }
 
 uninstall() {
