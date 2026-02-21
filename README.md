@@ -1,12 +1,12 @@
 # Claude Code Setup for Windows/WSL
 
-A portable Claude Code configuration system — 34 agents, 48+ skills, 8 deliberation modes, session persistence, lifecycle hooks, and a permissions system optimized for Windows/WSL parallel development. Based on [Boris Cherney's workflow](https://www.linkedin.com/posts/boris-cherny-3a8b2513_im-boris-and-i-created-claude-code-lots-activity-7337184857029169152-WUZB/) (creator of Claude Code).
+A portable Claude Code configuration system — 38 agents, 100+ skills, 8 deliberation modes, session persistence, lifecycle hooks, and a permissions system optimized for Windows/WSL parallel development. Based on [Boris Cherney's workflow](https://www.linkedin.com/posts/boris-cherny-3a8b2513_im-boris-and-i-created-claude-code-lots-activity-7337184857029169152-WUZB/) (creator of Claude Code).
 
 ## Features
 
 - **Multi-agent deliberation** — `/council` and `/academy` assemble 3-7 specialized agents to deliberate on design decisions
-- **34 agent personas** — 17 Council + 17 Academy, each with distinct cognitive lens and skills
-- **48+ structured skills** — organized across 16 departments with evolution tracking
+- **38 agent personas** — 21 Council + 17 Academy, each with distinct cognitive lens and skills
+- **100+ structured skills** — organized across 20 council departments + standalone packs
 - **Windows notifications** — toast notifications identifying which agent needs attention
 - **5 parallel agents** — using git worktrees with agent identification
 - **Auto-formatting** hooks for multiple languages
@@ -84,7 +84,7 @@ Eight modes control depth and involvement:
 
 `/brainstorm "idea"` is a shortcut for `--brainstorm` mode.
 
-### The 16 Agents
+### The 20 Agents
 
 Each agent brings a distinct cognitive lens. Sessions use 3-7 agents selected for relevance.
 
@@ -106,6 +106,10 @@ Each agent brings a distinct cognitive lens. Sessions use 3-7 agents selected fo
 | Herald | Bronze | Growth, monetization, onboarding, retention |
 | Sentinel | Titanium | IoT, embedded, edge, device protocols |
 | Oracle | Violet | AI/LLM integration, RAG, prompt engineering |
+| Cipher | Obsidian | Cryptographic engineering, protocol security, post-quantum |
+| Forge | Graphite | Microarchitecture, silicon design, RTL security |
+| Prover | Pearl | Formal methods, mathematical verification, invariants |
+| Warden | Slate | OS kernel security, process isolation, HW/SW boundary |
 
 The **Steward** (Platinum) serves as the conductor persona — always active, never spawned as a separate agent.
 
@@ -195,6 +199,7 @@ Pre-approved safe commands reduce permission prompts without using `--dangerousl
 | `Notification` | `notify.sh` | Desktop notification when Claude needs input |
 | `Stop` | `stop.sh` | Notification when Claude completes |
 | `PostToolUse` | `format.sh` | Auto-format after Write/Edit (Prettier, Black, gofmt, etc.) |
+| `PostToolUse` | `acceptance-gate.sh` | Quality gate on task completion |
 | `PreCompact` | `pre-compact-handover.sh` | Auto-save session context before compaction |
 
 ## Command Reference
@@ -244,6 +249,10 @@ Pre-approved safe commands reduce permission prompts without using `--dangerousl
 | `/lint` | Run linter with auto-fix |
 | `/review` | Review current git changes |
 | `/simplify` | Refactor and simplify recent changes |
+| `/diagnose` | Diagnose UI/CSS bugs against component map |
+| `/fix` | Apply and verify a fix from a diagnosis |
+| `/map` | Map a route's component tree |
+| `/qa` | Full frontend QA pipeline |
 
 ## Directory Layout
 
@@ -252,14 +261,14 @@ claude-code-wsl-setup/
 ├── install.sh              # Symlink-based installer
 ├── settings.json           # Merged settings (env + hooks + permissions)
 ├── hooks.json              # Standalone PreCompact hook
-├── agents/                 # 34 agent persona files (17 council + 17 academy)
-├── commands/               # 22 slash commands + shared engine
+├── agents/                 # 38 agent persona files (21 council + 17 academy)
+├── commands/               # 26 slash commands + shared engine
 │   ├── _council-engine.md  # Shared deliberation engine (~1200 lines)
 │   ├── council.md          # Council theme layer
 │   ├── academy.md          # Academy theme layer
 │   └── *.md                # Individual commands
-├── skills/                 # 48+ structured skill templates
-│   ├── council/            # 16 departments x 2-3 skills each
+├── skills/                 # 100+ structured skill templates
+│   ├── council/            # 20 departments x 2-3 skills each
 │   ├── academy/            # Academy theme skills
 │   └── */                  # 15 standalone skill packs
 ├── hooks/                  # Lifecycle hook scripts

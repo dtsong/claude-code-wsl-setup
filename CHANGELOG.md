@@ -4,6 +4,28 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-02-21
+
+Feature parity sync — adds missing agents, skills, commands, and hooks from `my-claude-setup`.
+
+### Added
+
+- 4 council agents: Cipher (Obsidian), Forge (Graphite), Prover (Pearl), Warden (Slate)
+- 4 council skill departments: cipher (3 skills), forge (3 skills), prover (2 skills), warden (2 skills)
+- Eval cases for 9 departments: alchemist, architect, cipher, forge, guardian, oracle, prover, skeptic, warden
+- 2 standalone skill packs: tdd (test-driven development), frontend-qa (4 sub-skills)
+- 4 commands: `/diagnose`, `/fix`, `/map`, `/qa`
+- `acceptance-gate.sh` hook with PostToolUse trigger on TaskUpdate
+- `statusLine`, `enabledPlugins`, and `effortLevel` in settings.json
+
+### Changed
+
+- Council agent count: 17 → 21 (38 total with Academy)
+- Skill count: 48+ → 100+
+- Department count: 16 → 20
+- Command count: 22 → 26
+- Updated docs: CLAUDE.md, README.md, ARCHITECTURE.md, CONTRIBUTING.md
+
 ## [2.0.0] - 2026-02-13
 
 Major expansion bringing feature parity with `my-claude-setup`.

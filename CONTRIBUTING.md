@@ -11,7 +11,7 @@ Thanks for contributing.
 ## Repository Structure
 
 - `skills/` contains Claude Code skills (each skill is a directory with `SKILL.md`).
-- `agents/` contains agent persona markdown (17 council + 17 academy).
+- `agents/` contains agent persona markdown (21 council + 17 academy).
 - `commands/` contains slash command prompt files and the shared deliberation engine.
 - `scripts/` and `hooks/` contain shell automation used by this setup.
 - `workspaces/` contains project-specific context templates.

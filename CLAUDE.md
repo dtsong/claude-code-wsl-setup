@@ -1,6 +1,6 @@
 # Claude Code Setup - Project Guide
 
-This repository contains a portable Claude Code configuration system — 34 agent personas, 48+ structured skills, multi-agent deliberation, session persistence, lifecycle hooks, and a permissions system optimized for Windows/WSL parallel development.
+This repository contains a portable Claude Code configuration system — 38 agent personas, 100+ structured skills, multi-agent deliberation, session persistence, lifecycle hooks, and a permissions system optimized for Windows/WSL parallel development.
 
 ## Quick Install (For New Users)
 
@@ -22,8 +22,8 @@ The legacy monolithic installer is preserved at `legacy/claude-code-setup.sh`.
 ## What This Project Does
 
 This setup enables:
-- **34 agent personas** (17 Council + 17 Academy) for multi-agent deliberation
-- **48+ structured skills** across 16 departments
+- **38 agent personas** (21 Council + 17 Academy) for multi-agent deliberation
+- **100+ structured skills** across 20 council departments + standalone packs
 - **8 deliberation modes** from quick brainstorm to deep audit
 - **Windows toast notifications** identifying which agent needs attention
 - **Auto-formatting hooks** for code changes
@@ -41,13 +41,13 @@ claude-code-wsl-setup/
 ├── install.sh              # Symlink-based installer (presets: skills/core/full)
 ├── settings.json           # Merged settings: env + hooks + permissions
 ├── hooks.json              # Standalone PreCompact hook config
-├── agents/                 # 34 agent personas (17 council + 17 academy)
+├── agents/                 # 38 agent personas (21 council + 17 academy)
 │   ├── council-architect.md
 │   ├── council-advocate.md
-│   ├── ...                 # 15 more council agents
+│   ├── ...                 # 19 more council agents
 │   ├── academy-sage.md
 │   └── ...                 # 16 more academy agents
-├── commands/               # 22 slash commands + shared engine
+├── commands/               # 26 slash commands + shared engine
 │   ├── _council-engine.md  # Shared deliberation engine (~1200 lines)
 │   ├── council.md          # Council theme layer
 │   ├── academy.md          # Academy theme layer
@@ -67,20 +67,27 @@ claude-code-wsl-setup/
 │   ├── test.md             # Run project tests
 │   ├── lint.md             # Run linter
 │   ├── review.md           # Review changes
-│   └── simplify.md         # Refactor/simplify code
-├── skills/                 # 48+ structured skill templates
-│   ├── council/            # 16 departments × 2-3 skills each
+│   ├── simplify.md         # Refactor/simplify code
+│   ├── diagnose.md         # Diagnose UI/CSS bugs
+│   ├── fix.md              # Apply and verify fixes
+│   ├── map.md              # Map route component trees
+│   └── qa.md               # Full frontend QA pipeline
+├── skills/                 # 100+ structured skill templates
+│   ├── council/            # 20 departments × 2-3 skills each
 │   ├── academy/            # Academy theme skills
 │   ├── git-workflows/      # Git operations
 │   ├── github-workflow/    # GitHub interactions
 │   ├── language-conventions/ # Python, TypeScript, Terraform refs
 │   ├── terraform-skill/    # Terraform best practices
 │   ├── dbt-skill/          # dbt data engineering
-│   └── ...                 # 9 more standalone skill packs
+│   ├── tdd/                # Test-driven development
+│   ├── frontend-qa/        # Frontend QA pipeline (4 sub-skills)
+│   └── ...                 # 7 more standalone skill packs
 ├── hooks/                  # Lifecycle hook scripts
 │   ├── notify.sh           # Notification when Claude needs input
 │   ├── stop.sh             # Notification when Claude completes
 │   ├── format.sh           # Auto-format code after edits
+│   ├── acceptance-gate.sh  # Quality gate for task completion
 │   └── pre-compact-handover.sh  # Auto-save before compaction
 ├── workspaces/             # Project-specific context templates
 │   ├── FORMAT.md
